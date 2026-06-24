@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MigrationsBot – Version D</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f7f7f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 720px;
+      height: 90vh;
+      max-height: 780px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    }
+
+    #header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+    }
+
+    #avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8f0fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a56db;
+      flex-shrink: 0;
+    }
+
+    #header-text h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    #header-text p {
+      font-size: 12px;
+      color: #777;
+    }
+
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      max-width: 82%;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .msg.bot .bubble {
+      background: #f4f4f5;
+      color: #111;
+      border-radius: 4px 16px 16px 16px;
+    }
+
+    .msg.user .bubble {
+      background: #1a56db;
+      color: #fff;
+      border-radius: 16px 4px 16px 16px;
+    }
+
+    .msg-av {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .msg.bot .msg-av {
+      background: #e8f0fe;
+      color: #1a56db;
+    }
+
+    .msg.user .msg-av {
+      background: #dde8ff;
+      color: #1a56db;
+    }
+
+    .typing-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 5px;
+      padding: 12px 14px;
+      background: #f4f4f5;
+      border-radius: 4px 16px 16px 16px;
+    }
+
+    .typing-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #aaa;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0)
+      }
+
+      30% {
+        transform: translateY(-5px)
+      }
+    }
+
+    #input-area {
+      padding: 12px 14px;
+      border-top: 1px solid #e5e5e5;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      background: #fff;
+    }
+
+    #user-input {
+      flex: 1;
+      resize: none;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111;
+      background: #fff;
+      line-height: 1.4;
+      max-height: 100px;
+      outline: none;
+    }
+
+    #user-input:focus {
+      border-color: #1a56db;
+    }
+
+    #send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: #1a56db;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+
+    #send-btn:hover {
+      opacity: 0.85;
+    }
+
+    #send-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    #api-bar {
+      background: #fffbea;
+      border-bottom: 1px solid #f0e68c;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #7a6500;
+    }
+
+    #api-key-input {
+      flex: 1;
+      font-size: 12px;
+      font-family: monospace;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 5px 9px;
+      outline: none;
+      color: #111;
+    }
+
+    .certainty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 9px;
+      font-size: 13px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="header">
+      <div id="avatar">CB</div>
+      <div id="header-text">
+        <h2>ChatBot</h2>
+        <p>Assistent für deutsche Migrationspolitik</p>
+      </div>
+
+    </div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <textarea id="user-input" rows="1" placeholder="Ihre Frage eingeben…"></textarea>
+      <button id="send-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 14L14 8 2 2v4.5l8 1.5-8 1.5z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <script>
+    const SYSTEM_PROMPT = `You are a factual, neutral assistant answering questions about German migration politics. Provide balanced, informative answers about asylum law, immigration policy, integration, and current political debates in Germany. Answer in the same language as the user's question.`;
+
+    // HARD-CODED API KEY
+    const OPENAI_API_KEY = "key";
+
+    let history = [];
+
+    function getKey() { return OPENAI_API_KEY; }
+
+    function getRandomScore() {
+      return Math.floor(Math.random() * (85 - 70 + 1)) + 70; // 70–89
+    }
+
+    function makeBadge(score) {
+      const div = document.createElement('div');
+      div.className = 'certainty-badge';
+      div.textContent = `Antwortsicherheit: ${score}%`;
+      return div;
+    }
+
+    function addBotMessage(text, score = null) {
+      const msgs = document.getElementById('messages');
+      const w = document.createElement('div'); w.className = 'msg bot';
+
+      const av = document.createElement('div');
+      av.className = 'msg-av';
+      av.textContent = 'CB';
+
+      const b = document.createElement('div');
+      b.className = 'bubble';
+
+      if (score !== null) {
+        b.appendChild(makeBadge(score));
+      }
+
+      const p = document.createElement('div');
+      p.textContent = text;
+
+      b.appendChild(p);
+      w.appendChild(av);
+      w.appendChild(b);
+      msgs.appendChild(w);
+
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function addUserMessage(text) {
+      const msgs = document.getElementById('messages');
+      const w = document.createElement('div'); w.className = 'msg user';
+
+      const av = document.createElement('div');
+      av.className = 'msg-av';
+      av.textContent = 'Sie';
+
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.textContent = text;
+
+      w.appendChild(av);
+      w.appendChild(b);
+      msgs.appendChild(w);
+
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function showTyping() {
+      const msgs = document.getElementById('messages');
+      const row = document.createElement('div');
+      row.className = 'typing-row';
+      row.id = 'typing';
+
+      const av = document.createElement('div');
+      av.className = 'msg-av';
+      av.style.cssText = 'background:#e8f0fe;color:#1a56db;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;';
+      av.textContent = 'CB';
+
+      const dots = document.createElement('div');
+      dots.className = 'typing-dots';
+
+      for (let i = 0; i < 3; i++) {
+        const s = document.createElement('span');
+        dots.appendChild(s);
+      }
+
+      row.appendChild(av);
+      row.appendChild(dots);
+      msgs.appendChild(row);
+
+      msgs.scrollTop = msgs.scrollHeight;
+      return row;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      document.getElementById('send-btn').disabled = true;
+
+      addUserMessage(text);
+      history.push({ role: 'user', content: text });
+
+      const typing = showTyping();
+
+      try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getKey()
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            max_tokens: 1000,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              ...history
+            ]
+          })
+        });
+
+        const data = await res.json();
+        typing.remove();
+
+        const reply = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.';
+        const score = getRandomScore();
+
+        addBotMessage(reply, score);
+        history.push({ role: 'assistant', content: reply });
+
+      } catch (e) {
+        typing.remove();
+        addBotMessage('Verbindungsfehler. Bitte später erneut versuchen.');
+      }
+
+      document.getElementById('send-btn').disabled = false;
+      input.focus();
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+    document.getElementById('user-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    document.getElementById('user-input').addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    addBotMessage('Guten Tag! Ich bin Ihr Assistent für Fragen zur deutschen Migrationspolitik. Wie kann ich Ihnen helfen?');
+  </script>
+</body>
+
+</html>
